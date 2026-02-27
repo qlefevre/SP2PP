@@ -32,7 +32,7 @@ public class SP2PP {
             }
 
             Account account = new Account("Hedios","Hedios");
-            Portfolio portfolio = new Portfolio();
+            Portfolio portfolio = new Portfolio("Hedios","Hedios");
             client.addAccount(account);
             portfolio.setReferenceAccount(account);
             client.addPortfolio(portfolio);

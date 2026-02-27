@@ -1,7 +1,10 @@
 package com.github.qlefevre.sp2pp.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class Portfolio
 {
@@ -14,6 +17,17 @@ public class Portfolio
 
     private List<PortfolioTransaction> transactions = new ArrayList<>();
 
+    private Map<String, String> attributes;
+
+    private UUID uuid;
+
+    public Portfolio(String name, String id)
+    {
+        this.name = name;
+        this.id = id;
+        this.attributes = new HashMap<>();
+        this.uuid = UUID.randomUUID();
+    }
 
     public String getId() { return id; }
     public String getName()
@@ -53,6 +67,13 @@ public class Portfolio
     public void addAllTransaction(List<PortfolioTransaction> transactions)
     {
         this.transactions.addAll(transactions);
+    }
+
+    public Map<String, String> getAttributes() { return attributes; }
+
+    public UUID getUuid()
+    {
+        return uuid;
     }
 
     @Override

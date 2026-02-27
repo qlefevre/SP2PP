@@ -1,7 +1,9 @@
 package com.github.qlefevre.sp2pp.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Account
 {
@@ -12,12 +14,15 @@ public class Account
 
     private List<AccountTransaction> transactions = new ArrayList<>();
 
+    private Map<String, String> attributes;
+
 
     public Account(String name, String id)
     {
         this.name = name;
         this.id = id;
         this.currencyCode = "EUR";
+        this.attributes = new HashMap<>();
     }
 
     public String getName()
@@ -62,6 +67,8 @@ public class Account
     {
         this.transactions.add(transaction);
     }
+
+    public Map<String, String> getAttributes() { return attributes; }
 
     @Override
     public String toString()

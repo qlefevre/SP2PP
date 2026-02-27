@@ -26,6 +26,7 @@ public class XmlGenerator {
         xstream.omitField(Client.class, "id");
         xstream.omitField(Security.class, "id");
         xstream.omitField(Account.class, "id");
+        xstream.omitField(Portfolio.class, "id");
 
         xstream.useAttributeFor(Price.class,  "t");
         xstream.useAttributeFor(Price.class, "v");
