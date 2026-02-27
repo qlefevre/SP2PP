@@ -22,7 +22,7 @@ public class Security {
         this.currencyCode = "EUR";
         this.feed = "MANUAL";
         this.attributes = new HashMap<>();
-        this.attributes.put("issuer", issuer);
+        //this.attributes.put("issuer", issuer);
         this.isRetired = false;
         this.prices = new ArrayList<>();
         this.prices.add(new Price("2026-02-22", "100000000000")); 

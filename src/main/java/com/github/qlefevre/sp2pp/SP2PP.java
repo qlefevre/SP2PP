@@ -1,6 +1,8 @@
 package com.github.qlefevre.sp2pp;
 
+import com.github.qlefevre.sp2pp.model.Account;
 import com.github.qlefevre.sp2pp.model.Client;
+import com.github.qlefevre.sp2pp.model.Portfolio;
 import com.github.qlefevre.sp2pp.model.Security;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -28,6 +30,12 @@ public class SP2PP {
                 Security security = new Security(isin, name, isin, issuer);
                 client.addSecurity(security);
             }
+
+            Account account = new Account("Hedios","Hedios");
+            Portfolio portfolio = new Portfolio();
+            client.addAccount(account);
+            portfolio.setReferenceAccount(account);
+            client.addPortfolio(portfolio);
 
             XmlGenerator.generateXml(client, "output.xml");
             System.out.println("XML file created successfully.");
