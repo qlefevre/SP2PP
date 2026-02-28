@@ -63,6 +63,11 @@ public class Portfolio
     {
         return transactions;
     }
+    
+    public void addTransaction(PortfolioTransaction transaction)
+    {
+        this.transactions.add(transaction);
+    }
 
     public void addAllTransaction(List<PortfolioTransaction> transactions)
     {

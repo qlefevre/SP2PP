@@ -15,14 +15,15 @@ public class Security {
     private Map<String, String> attributes;
     private boolean isRetired;
 
-    public Security(String id, String name, String isin, String issuer) {
+    public Security(String id, String name, String isin, String issuer, String strikeDate) {
         this.id = id;
         this.name = name;
         this.isin = isin;
         this.currencyCode = "EUR";
         this.feed = "MANUAL";
         this.attributes = new HashMap<>();
-        //this.attributes.put("issuer", issuer);
+        this.attributes.put("issuer", issuer);
+        this.attributes.put("strike date", strikeDate);
         this.isRetired = false;
         this.prices = new ArrayList<>();
         this.prices.add(new Price("2026-02-22", "100000000000")); 

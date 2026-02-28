@@ -1,11 +1,11 @@
 package com.github.qlefevre.sp2pp.model;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public abstract class Transaction
 {
 
-    private LocalDateTime date;
+    private LocalDate date;
     private String currencyCode;
     private long amount;
 
@@ -15,12 +15,12 @@ public abstract class Transaction
     private String source;
 
 
-    public Transaction(LocalDateTime date, String currencyCode, long amount)
+    public Transaction(LocalDate date, String currencyCode, long amount)
     {
         this(date, currencyCode, amount, null, 0, null);
     }
 
-    public Transaction(LocalDateTime date, String currencyCode, long amount, Security security, long shares,
+    public Transaction(LocalDate date, String currencyCode, long amount, Security security, long shares,
                     String note)
     {
         this.date = date;
@@ -33,12 +33,12 @@ public abstract class Transaction
 
 
 
-    public LocalDateTime getDateTime()
+    public LocalDate getDateTime()
     {
         return date;
     }
 
-    public void setDateTime(LocalDateTime date)
+    public void setDateTime(LocalDate date)
     {
         this.date = date;
 

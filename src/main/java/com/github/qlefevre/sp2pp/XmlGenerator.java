@@ -1,12 +1,12 @@
 package com.github.qlefevre.sp2pp;
 
 import com.github.qlefevre.sp2pp.model.*;
+import com.github.qlefevre.sp2pp.xstream.CustomMapConverter;
 import com.github.qlefevre.sp2pp.xstream.CustomReferenceByIdMarshallingStrategy;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 import java.io.FileWriter;
-import java.util.Map;
 
 public class XmlGenerator {
     public static void generateXml(Client client, String outputPath) throws Exception {
@@ -14,6 +14,8 @@ public class XmlGenerator {
 
         // Active les références circulaires (pour éviter la duplication des objets)
         xstream.setMarshallingStrategy(new CustomReferenceByIdMarshallingStrategy());
+        // Map <map> <entry>
+        xstream.registerConverter(new CustomMapConverter(xstream.getMapper()));
 
          // Alias pour les classes
         xstream.alias("client", Client.class);
@@ -21,6 +23,8 @@ public class XmlGenerator {
         xstream.alias("price", Price.class);
         xstream.alias("portfolio", Portfolio.class);
         xstream.alias("account", Account.class);
+        xstream.alias("portfolio-transaction", PortfolioTransaction.class);
+        
 
         // Configuration pour les attributs
         xstream.omitField(Client.class, "id");
@@ -30,12 +34,6 @@ public class XmlGenerator {
 
         xstream.useAttributeFor(Price.class,  "t");
         xstream.useAttributeFor(Price.class, "v");
-
-
-        // Configuration pour les Map
-        xstream.alias("map", Map.class);
-        xstream.alias("entry", Map.Entry.class);
-        //xstream.useAttributeFor(Map.Entry.class, "key");
      
         try (FileWriter writer = new FileWriter(outputPath)) {
             writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");

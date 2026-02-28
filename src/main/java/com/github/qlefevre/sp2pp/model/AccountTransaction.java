@@ -1,6 +1,6 @@
 package com.github.qlefevre.sp2pp.model;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class AccountTransaction extends Transaction{
 
@@ -40,7 +40,7 @@ public class AccountTransaction extends Transaction{
 
     private Type type;
 
-    public AccountTransaction(LocalDateTime date, String currencyCode, long amount, Security security, Type type)
+    public AccountTransaction(LocalDate date, String currencyCode, long amount, Security security, Type type)
     {
         super(date, currencyCode, amount, security, 0, null);
         this.type = type;
