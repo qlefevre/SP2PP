@@ -1,6 +1,7 @@
 package com.github.qlefevre.sp2pp;
 
 import com.github.qlefevre.sp2pp.model.Account;
+import com.github.qlefevre.sp2pp.model.AccountTransaction;
 import com.github.qlefevre.sp2pp.model.Client;
 import com.github.qlefevre.sp2pp.model.Portfolio;
 import com.github.qlefevre.sp2pp.model.PortfolioTransaction;
@@ -23,13 +24,15 @@ public class SP2PP {
             
             Client client = new Client("1");
 
-            Map<String, Portfolio> portfoliosMap = createPortfolios(client);
+            Map<String, Portfolio> portfoliosMap = new HashMap<>();
+            Map<String, Account> accountsMap = new HashMap<>();
+            createPortfolios(client, portfoliosMap, accountsMap);
 
             Sheet sheet = workbook.getSheetAt(1); // Deuxième onglet Produits structurés
             Map<String,Security> securitiesMap = addSecurities(sheet, client);
 
             sheet = workbook.getSheetAt(0); // Premier onglet Portefeuille
-            addBuyTransactions(sheet, client, securitiesMap, portfoliosMap);
+            addBuyTransactions(sheet, client, securitiesMap, portfoliosMap,accountsMap);
 
             XmlGenerator.generateXml(client, "output.xml");
             System.out.println("XML file created successfully.");
@@ -39,8 +42,8 @@ public class SP2PP {
         }
     }
 
-    private static Map<String, Portfolio> createPortfolios(Client client) {
-        Map<String, Portfolio> portfoliosMap = new HashMap<>();
+    private static void createPortfolios(Client client, Map<String, Portfolio> portfoliosMap, Map<String, Account> accountsMap) {
+        
         String[] brokers = {"Hedios","Linxea","Cashbee","MeilleurTaux"};
         for(String broker : brokers){
             Account account = new Account(broker, broker);
@@ -49,9 +52,8 @@ public class SP2PP {
             portfolio.setReferenceAccount(account);
             client.addPortfolio(portfolio);
             portfoliosMap.put(portfolio.getName(), portfolio);
-        }
-        
-        return portfoliosMap;
+            accountsMap.put(account.getName(), account);
+        };
     }
 
     private static Map<String, Security> addSecurities(Sheet sheet, Client client) {
@@ -79,7 +81,7 @@ public class SP2PP {
     }
 
     private static void addBuyTransactions(Sheet sheet, Client client, Map<String, Security> securitiesMap,
-        Map<String, Portfolio>  portfoliosMap) {
+        Map<String, Portfolio>  portfoliosMap, Map<String, Account> accountsMap) {
         
         Iterator<Row> rowIterator = sheet.iterator();
         while (rowIterator.hasNext()) {
@@ -99,12 +101,17 @@ public class SP2PP {
             LocalDate transactionDate = row.getCell(9).getDateCellValue().toInstant()
             .atZone(ZoneId.systemDefault()).toLocalDate();
 
-            Portfolio portfolio = portfoliosMap.get(broker);
+  
             Security security = securitiesMap.get(isin);
             PortfolioTransaction transaction = 
             new PortfolioTransaction(transactionDate, "EUR", 
             computedAmount, security, computedShared, PortfolioTransaction.Type.BUY);
-            portfolio.addTransaction(transaction);
+            portfoliosMap.get(broker).addTransaction(transaction);
+
+            AccountTransaction accountTransaction = new AccountTransaction(transactionDate, "EUR", 
+            computedAmount, security,  AccountTransaction.Type.BUY);
+            accountsMap.get(broker).addTransaction(accountTransaction);
+
         }
         
     }
