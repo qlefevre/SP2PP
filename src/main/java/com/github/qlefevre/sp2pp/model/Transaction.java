@@ -1,5 +1,6 @@
 package com.github.qlefevre.sp2pp.model;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 public abstract class Transaction
@@ -10,6 +11,7 @@ public abstract class Transaction
     private long amount;
 
     private Security security;
+    private CrossEntry crossEntry;
     private long shares;
     private String note;
     private String source;
@@ -84,6 +86,16 @@ public abstract class Transaction
     {
         this.security = security;
 
+    }
+
+     public CrossEntry getCrossEntry()
+    {
+        return crossEntry;
+    }
+
+    /* package */void setCrossEntry(CrossEntry crossEntry)
+    {
+        this.crossEntry = crossEntry;
     }
 
     public long getShares()

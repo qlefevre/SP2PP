@@ -2,6 +2,7 @@ package com.github.qlefevre.sp2pp;
 
 import com.github.qlefevre.sp2pp.model.Account;
 import com.github.qlefevre.sp2pp.model.AccountTransaction;
+import com.github.qlefevre.sp2pp.model.BuySellEntry;
 import com.github.qlefevre.sp2pp.model.Client;
 import com.github.qlefevre.sp2pp.model.Portfolio;
 import com.github.qlefevre.sp2pp.model.PortfolioTransaction;
@@ -111,6 +112,8 @@ public class SP2PP {
             AccountTransaction accountTransaction = new AccountTransaction(transactionDate, "EUR", 
             computedAmount, security,  AccountTransaction.Type.BUY);
             accountsMap.get(broker).addTransaction(accountTransaction);
+
+            new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
 
         }
         

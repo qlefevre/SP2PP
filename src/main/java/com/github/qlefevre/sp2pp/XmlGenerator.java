@@ -25,6 +25,8 @@ public class XmlGenerator {
         xstream.alias("account", Account.class);
         xstream.alias("portfolio-transaction", PortfolioTransaction.class);
         xstream.alias("account-transaction", AccountTransaction.class);
+        xstream.alias("buysell", BuySellEntry.class);
+        xstream.alias("crossEntry", CrossEntry.class);
 
         // Configuration pour les attributs
         xstream.omitField(Client.class, "id");
