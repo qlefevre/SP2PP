@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,6 +35,10 @@ public class SP2PP {
 
             sheet = workbook.getSheetAt(0); // Premier onglet Portefeuille
             addBuyTransactions(sheet, client, securitiesMap, portfoliosMap,accountsMap);
+
+             sheet = workbook.getSheetAt(3); // Quatrième onglet PS remboursés
+            addSellTransactions(sheet, client, securitiesMap, portfoliosMap,accountsMap);
+
 
             XmlGenerator.generateXml(client, "output.xml");
             System.out.println("XML file created successfully.");
@@ -111,6 +116,61 @@ public class SP2PP {
 
             AccountTransaction accountTransaction = new AccountTransaction(transactionDate, "EUR", 
             computedAmount, security,  AccountTransaction.Type.BUY);
+            accountsMap.get(broker).addTransaction(accountTransaction);
+
+            new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
+
+        }
+        
+    }
+
+
+    private static void addSellTransactions(Sheet sheet, Client client, Map<String, Security> securitiesMap,
+        Map<String, Portfolio>  portfoliosMap, Map<String, Account> accountsMap) {
+        
+        Iterator<Row> rowIterator = sheet.iterator();
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            if (row.getRowNum() == 0 || row.getCell(0) == null || row.getCell(0).getStringCellValue().isEmpty())
+                continue;
+
+            String isin = row.getCell(0).getStringCellValue();
+            String broker = row.getCell(2).getStringCellValue();
+            BigDecimal shares = BigDecimal.valueOf(row.getCell(4).getNumericCellValue());
+
+            // Mise au format Portfolio Performance
+            long computedShared = shares.multiply(BigDecimal.valueOf(100000000)).longValue(); // Convertir les actions en "parts" (en multipliant par 100 millions)
+            long computedAmount = shares.multiply(BigDecimal.valueOf(100000)).longValue(); // Montant standard produit structuré = 1000 euros
+
+            Security security = securitiesMap.get(isin);
+
+            // Date de constation intiale
+            LocalDate transactionDate = LocalDate.parse(security.getAttributes().get("strike date"),DateTimeFormatter.ISO_LOCAL_DATE);
+            
+            // Transaction d'achat à la date de constatation initiale
+            PortfolioTransaction transaction = 
+            new PortfolioTransaction(transactionDate, "EUR", 
+            computedAmount, security, computedShared, PortfolioTransaction.Type.BUY);
+            portfoliosMap.get(broker).addTransaction(transaction);
+
+            AccountTransaction accountTransaction = new AccountTransaction(transactionDate, "EUR", 
+            computedAmount, security,  AccountTransaction.Type.BUY);
+            accountsMap.get(broker).addTransaction(accountTransaction);
+
+            new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
+
+            // Transaction de vente à la date de remboursement
+            BigDecimal gain = BigDecimal.valueOf(row.getCell(10).getNumericCellValue());
+            long totalAmount = shares.multiply(BigDecimal.valueOf(1000)).add(gain).multiply(BigDecimal.valueOf(100)).longValue(); // Montant standard produit structuré + gain
+            LocalDate sellTransactionDate = row.getCell(9).getDateCellValue().toInstant()
+            .atZone(ZoneId.systemDefault()).toLocalDate();
+
+            transaction = new PortfolioTransaction(sellTransactionDate, "EUR", 
+            totalAmount, security, computedShared, PortfolioTransaction.Type.SELL);
+            portfoliosMap.get(broker).addTransaction(transaction);
+
+            accountTransaction = new AccountTransaction(sellTransactionDate, "EUR", 
+            totalAmount, security,  AccountTransaction.Type.SELL);
             accountsMap.get(broker).addTransaction(accountTransaction);
 
             new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
