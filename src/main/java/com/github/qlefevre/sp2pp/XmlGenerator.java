@@ -1,6 +1,16 @@
 package com.github.qlefevre.sp2pp;
 
 import com.github.qlefevre.sp2pp.model.*;
+import com.github.qlefevre.sp2pp.settings.AttributeType;
+import com.github.qlefevre.sp2pp.settings.AttributeTypes;
+import com.github.qlefevre.sp2pp.settings.Bookmark;
+import com.github.qlefevre.sp2pp.settings.Bookmarks;
+import com.github.qlefevre.sp2pp.settings.Config;
+import com.github.qlefevre.sp2pp.settings.ConfigEntry;
+import com.github.qlefevre.sp2pp.settings.ConfigSet;
+import com.github.qlefevre.sp2pp.settings.ConfigurationSets;
+import com.github.qlefevre.sp2pp.settings.Configurations;
+import com.github.qlefevre.sp2pp.settings.Settings;
 import com.github.qlefevre.sp2pp.xstream.CustomMapConverter;
 import com.github.qlefevre.sp2pp.xstream.CustomReferenceByIdMarshallingStrategy;
 import com.thoughtworks.xstream.XStream;
@@ -27,6 +37,25 @@ public class XmlGenerator {
         xstream.alias("account-transaction", AccountTransaction.class);
         xstream.alias("buysell", BuySellEntry.class);
         xstream.alias("crossEntry", CrossEntry.class);
+        
+        // entries used in <configurationSets>
+        // settings subtree
+        xstream.alias("config-set", ConfigSet.class);
+        xstream.aliasField("config-set", ConfigEntry.class, "configSet");
+        xstream.alias("entry", ConfigEntry.class);
+        xstream.alias("configurations", Configurations.class);
+        xstream.alias("config", Config.class);
+        xstream.alias("configurationSets", ConfigurationSets.class);
+        xstream.alias("settings", Settings.class);
+        xstream.alias("bookmarks", Bookmarks.class);
+        xstream.alias("bookmark", Bookmark.class);
+        xstream.alias("attributeTypes", AttributeTypes.class);
+        xstream.alias("attribute-type", AttributeType.class);
+        xstream.addImplicitCollection(ConfigurationSets.class, "entry");
+        xstream.addImplicitCollection(Configurations.class, "config");
+        xstream.addImplicitCollection(AttributeTypes.class, "attributeType");
+
+
 
         // Configuration pour les attributs
         xstream.omitField(Client.class, "id");

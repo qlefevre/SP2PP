@@ -3,6 +3,8 @@ package com.github.qlefevre.sp2pp.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.qlefevre.sp2pp.settings.Settings;
+
 public class Client {
     private String id;
     private String version;
@@ -10,6 +12,7 @@ public class Client {
     private List<Security> securities;
     private List<Account> accounts = new ArrayList<>();
     private List<Portfolio> portfolios = new ArrayList<>();
+    private Settings settings;
 
     public Client(String id) {
         this.id = id;
@@ -34,6 +37,14 @@ public class Client {
     public List<Account> getAccounts()
     {
         return accounts;
+    }
+
+    public Settings getSettings() {
+        return settings;
+    }
+
+    public void setSettings(Settings settings) {
+        this.settings = settings;
     }
 
 

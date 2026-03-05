@@ -1,6 +1,5 @@
 package com.github.qlefevre.sp2pp.model;
 
-import java.time.Instant;
 import java.time.LocalDate;
 
 public abstract class Transaction

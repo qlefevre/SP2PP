@@ -7,6 +7,17 @@ import com.github.qlefevre.sp2pp.model.Client;
 import com.github.qlefevre.sp2pp.model.Portfolio;
 import com.github.qlefevre.sp2pp.model.PortfolioTransaction;
 import com.github.qlefevre.sp2pp.model.Security;
+import com.github.qlefevre.sp2pp.settings.AttributeType;
+import com.github.qlefevre.sp2pp.settings.AttributeTypes;
+import com.github.qlefevre.sp2pp.settings.Bookmark;
+import com.github.qlefevre.sp2pp.settings.Bookmarks;
+import com.github.qlefevre.sp2pp.settings.Config;
+import com.github.qlefevre.sp2pp.settings.ConfigEntry;
+import com.github.qlefevre.sp2pp.settings.ConfigSet;
+import com.github.qlefevre.sp2pp.settings.ConfigurationSets;
+import com.github.qlefevre.sp2pp.settings.Configurations;
+import com.github.qlefevre.sp2pp.settings.Settings;
+
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileInputStream;
@@ -18,40 +29,44 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class SP2PP {
     public static void main(String[] args) {
-        try(FileInputStream excelFile = new FileInputStream(args[0])) {
-            try(Workbook workbook = new XSSFWorkbook(excelFile)){
-            
-            Client client = new Client("1");
+        try (FileInputStream excelFile = new FileInputStream(args[0])) {
+            try (Workbook workbook = new XSSFWorkbook(excelFile)) {
 
-            Map<String, Portfolio> portfoliosMap = new HashMap<>();
-            Map<String, Account> accountsMap = new HashMap<>();
-            createPortfolios(client, portfoliosMap, accountsMap);
+                Client client = new Client("1");
 
-            Sheet sheet = workbook.getSheetAt(1); // Deuxième onglet Produits structurés
-            Map<String,Security> securitiesMap = addSecurities(sheet, client);
+                Map<String, Portfolio> portfoliosMap = new HashMap<>();
+                Map<String, Account> accountsMap = new HashMap<>();
+                createPortfolios(client, portfoliosMap, accountsMap);
 
-            sheet = workbook.getSheetAt(0); // Premier onglet Portefeuille
-            addBuyTransactions(sheet, client, securitiesMap, portfoliosMap,accountsMap);
+                Sheet sheet = workbook.getSheetAt(1); // Deuxième onglet Produits structurés
+                Map<String, Security> securitiesMap = addSecurities(sheet, client);
 
-             sheet = workbook.getSheetAt(3); // Quatrième onglet PS remboursés
-            addSellTransactions(sheet, client, securitiesMap, portfoliosMap,accountsMap);
+                sheet = workbook.getSheetAt(0); // Premier onglet Portefeuille
+                addBuyTransactions(sheet, client, securitiesMap, portfoliosMap, accountsMap);
 
+                sheet = workbook.getSheetAt(3); // Quatrième onglet PS remboursés
+                addSellTransactions(sheet, client, securitiesMap, portfoliosMap, accountsMap);
 
-            XmlGenerator.generateXml(client, "output.xml");
-            System.out.println("XML file created successfully.");
+                client.setSettings(createSettings(portfoliosMap));
+
+                XmlGenerator.generateXml(client, "output.xml");
+                System.out.println("XML file created successfully.");
             }
         } catch (Exception e) {
             throw new RuntimeException("Error processing Excel file", e);
         }
     }
 
-    private static void createPortfolios(Client client, Map<String, Portfolio> portfoliosMap, Map<String, Account> accountsMap) {
-        
-        String[] brokers = {"Hedios","Linxea","Cashbee","MeilleurTaux"};
-        for(String broker : brokers){
+    private static void createPortfolios(Client client, Map<String, Portfolio> portfoliosMap,
+            Map<String, Account> accountsMap) {
+
+        String[] brokers = { "Hedios", "Linxea", "Cashbee", "MeilleurTaux" };
+        for (String broker : brokers) {
             Account account = new Account(broker, broker);
             Portfolio portfolio = new Portfolio(broker, broker);
             client.addAccount(account);
@@ -59,12 +74,13 @@ public class SP2PP {
             client.addPortfolio(portfolio);
             portfoliosMap.put(portfolio.getName(), portfolio);
             accountsMap.put(account.getName(), account);
-        };
+        }
+        ;
     }
 
     private static Map<String, Security> addSecurities(Sheet sheet, Client client) {
         Map<String, Security> securitiesMap = new HashMap<>();
-        
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         Iterator<Row> rowIterator = sheet.iterator();
@@ -79,7 +95,7 @@ public class SP2PP {
             // initial observation date / strike date
             String strikeDate = dateFormat.format(row.getCell(11).getDateCellValue());
 
-            Security security = new Security(isin, name, isin, issuer,strikeDate);
+            Security security = new Security(isin, name, isin, issuer, strikeDate);
             client.addSecurity(security);
             securitiesMap.put(isin, security);
         }
@@ -87,8 +103,8 @@ public class SP2PP {
     }
 
     private static void addBuyTransactions(Sheet sheet, Client client, Map<String, Security> securitiesMap,
-        Map<String, Portfolio>  portfoliosMap, Map<String, Account> accountsMap) {
-        
+            Map<String, Portfolio> portfoliosMap, Map<String, Account> accountsMap) {
+
         Iterator<Row> rowIterator = sheet.iterator();
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
@@ -100,34 +116,35 @@ public class SP2PP {
             BigDecimal shares = BigDecimal.valueOf(row.getCell(4).getNumericCellValue());
 
             // Mise au format Portfolio Performance
-            long computedShared = shares.multiply(BigDecimal.valueOf(100000000)).longValue(); // Convertir les actions en "parts" (en multipliant par 100 millions)
-            long computedAmount = shares.multiply(BigDecimal.valueOf(100000)).longValue(); // Montant standard produit structuré = 1000 euros
+            long computedShared = shares.multiply(BigDecimal.valueOf(100000000)).longValue(); // Convertir les actions
+                                                                                              // en "parts" (en
+                                                                                              // multipliant par 100
+                                                                                              // millions)
+            long computedAmount = shares.multiply(BigDecimal.valueOf(100000)).longValue(); // Montant standard produit
+                                                                                           // structuré = 1000 euros
 
             // Date de constation intiale
             LocalDate transactionDate = row.getCell(9).getDateCellValue().toInstant()
-            .atZone(ZoneId.systemDefault()).toLocalDate();
+                    .atZone(ZoneId.systemDefault()).toLocalDate();
 
-  
             Security security = securitiesMap.get(isin);
-            PortfolioTransaction transaction = 
-            new PortfolioTransaction(transactionDate, "EUR", 
-            computedAmount, security, computedShared, PortfolioTransaction.Type.BUY);
+            PortfolioTransaction transaction = new PortfolioTransaction(transactionDate, "EUR",
+                    computedAmount, security, computedShared, PortfolioTransaction.Type.BUY);
             portfoliosMap.get(broker).addTransaction(transaction);
 
-            AccountTransaction accountTransaction = new AccountTransaction(transactionDate, "EUR", 
-            computedAmount, security,  AccountTransaction.Type.BUY);
+            AccountTransaction accountTransaction = new AccountTransaction(transactionDate, "EUR",
+                    computedAmount, security, AccountTransaction.Type.BUY);
             accountsMap.get(broker).addTransaction(accountTransaction);
 
             new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
 
         }
-        
+
     }
 
-
     private static void addSellTransactions(Sheet sheet, Client client, Map<String, Security> securitiesMap,
-        Map<String, Portfolio>  portfoliosMap, Map<String, Account> accountsMap) {
-        
+            Map<String, Portfolio> portfoliosMap, Map<String, Account> accountsMap) {
+
         Iterator<Row> rowIterator = sheet.iterator();
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
@@ -139,43 +156,80 @@ public class SP2PP {
             BigDecimal shares = BigDecimal.valueOf(row.getCell(4).getNumericCellValue());
 
             // Mise au format Portfolio Performance
-            long computedShared = shares.multiply(BigDecimal.valueOf(100000000)).longValue(); // Convertir les actions en "parts" (en multipliant par 100 millions)
-            long computedAmount = shares.multiply(BigDecimal.valueOf(100000)).longValue(); // Montant standard produit structuré = 1000 euros
+            long computedShared = shares.multiply(BigDecimal.valueOf(100000000)).longValue(); // Convertir les actions
+                                                                                              // en "parts" (en
+                                                                                              // multipliant par 100
+                                                                                              // millions)
+            long computedAmount = shares.multiply(BigDecimal.valueOf(100000)).longValue(); // Montant standard produit
+                                                                                           // structuré = 1000 euros
 
             Security security = securitiesMap.get(isin);
 
             // Date de constation intiale
-            LocalDate transactionDate = LocalDate.parse(security.getAttributes().get("strike date"),DateTimeFormatter.ISO_LOCAL_DATE);
-            
+            LocalDate transactionDate = LocalDate.parse(security.getAttributes().get("strike date"),
+                    DateTimeFormatter.ISO_LOCAL_DATE);
+
             // Transaction d'achat à la date de constatation initiale
-            PortfolioTransaction transaction = 
-            new PortfolioTransaction(transactionDate, "EUR", 
-            computedAmount, security, computedShared, PortfolioTransaction.Type.BUY);
+            PortfolioTransaction transaction = new PortfolioTransaction(transactionDate, "EUR",
+                    computedAmount, security, computedShared, PortfolioTransaction.Type.BUY);
             portfoliosMap.get(broker).addTransaction(transaction);
 
-            AccountTransaction accountTransaction = new AccountTransaction(transactionDate, "EUR", 
-            computedAmount, security,  AccountTransaction.Type.BUY);
+            AccountTransaction accountTransaction = new AccountTransaction(transactionDate, "EUR",
+                    computedAmount, security, AccountTransaction.Type.BUY);
             accountsMap.get(broker).addTransaction(accountTransaction);
 
             new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
 
             // Transaction de vente à la date de remboursement
             BigDecimal gain = BigDecimal.valueOf(row.getCell(10).getNumericCellValue());
-            long totalAmount = shares.multiply(BigDecimal.valueOf(1000)).add(gain).multiply(BigDecimal.valueOf(100)).longValue(); // Montant standard produit structuré + gain
+            long totalAmount = shares.multiply(BigDecimal.valueOf(1000)).add(gain).multiply(BigDecimal.valueOf(100))
+                    .longValue(); // Montant standard produit structuré + gain
             LocalDate sellTransactionDate = row.getCell(9).getDateCellValue().toInstant()
-            .atZone(ZoneId.systemDefault()).toLocalDate();
+                    .atZone(ZoneId.systemDefault()).toLocalDate();
 
-            transaction = new PortfolioTransaction(sellTransactionDate, "EUR", 
-            totalAmount, security, computedShared, PortfolioTransaction.Type.SELL);
+            transaction = new PortfolioTransaction(sellTransactionDate, "EUR",
+                    totalAmount, security, computedShared, PortfolioTransaction.Type.SELL);
             portfoliosMap.get(broker).addTransaction(transaction);
 
-            accountTransaction = new AccountTransaction(sellTransactionDate, "EUR", 
-            totalAmount, security,  AccountTransaction.Type.SELL);
+            accountTransaction = new AccountTransaction(sellTransactionDate, "EUR",
+                    totalAmount, security, AccountTransaction.Type.SELL);
             accountsMap.get(broker).addTransaction(accountTransaction);
 
             new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
 
         }
-        
+
     }
+
+    private static Settings createSettings(Map<String, Portfolio> portfoliosMap) {
+        Settings settings = new Settings();
+
+        // Empty bookmarks
+        settings.setBookmarks(new Bookmarks());
+
+        // Empty attributeTypes
+        settings.setAttributeTypes(new AttributeTypes());
+
+        // ConfigurationSets with one entry
+        ConfigurationSets configSets = new ConfigurationSets();
+        ConfigEntry entry = new ConfigEntry();
+        entry.setString("client-filter-definitions");
+
+        ConfigSet configSet = new ConfigSet();
+        Configurations configurations = new Configurations();
+        Config config = new Config();
+        config.setUuid(UUID.randomUUID().toString());
+        config.setName(portfoliosMap.keySet().stream().sorted().collect(Collectors.joining(", "))); 
+        config.setData(portfoliosMap.values().stream().map(Portfolio::getUuid).map(Object::toString)
+                .collect(Collectors.joining(","))); 
+        configurations.getConfig().add(config);
+        configSet.setConfigurations(configurations);
+        entry.setConfigSet(configSet);
+        configSets.getEntry().add(entry);
+
+        settings.setConfigurationSets(configSets);
+
+        return settings;
+    }
+
 }
