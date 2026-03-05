@@ -37,7 +37,8 @@ public class XmlGenerator {
         xstream.alias("account-transaction", AccountTransaction.class);
         xstream.alias("buysell", BuySellEntry.class);
         xstream.alias("crossEntry", CrossEntry.class);
-        
+        xstream.alias("watchlist", Watchlist.class);
+
         // entries used in <configurationSets>
         // settings subtree
         xstream.alias("config-set", ConfigSet.class);
@@ -54,8 +55,6 @@ public class XmlGenerator {
         xstream.addImplicitCollection(ConfigurationSets.class, "entry");
         xstream.addImplicitCollection(Configurations.class, "config");
         xstream.addImplicitCollection(AttributeTypes.class, "attributeType");
-
-
 
         // Configuration pour les attributs
         xstream.omitField(Client.class, "id");

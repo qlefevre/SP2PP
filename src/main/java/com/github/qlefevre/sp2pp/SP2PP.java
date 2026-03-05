@@ -7,9 +7,8 @@ import com.github.qlefevre.sp2pp.model.Client;
 import com.github.qlefevre.sp2pp.model.Portfolio;
 import com.github.qlefevre.sp2pp.model.PortfolioTransaction;
 import com.github.qlefevre.sp2pp.model.Security;
-import com.github.qlefevre.sp2pp.settings.AttributeType;
+import com.github.qlefevre.sp2pp.model.Watchlist;
 import com.github.qlefevre.sp2pp.settings.AttributeTypes;
-import com.github.qlefevre.sp2pp.settings.Bookmark;
 import com.github.qlefevre.sp2pp.settings.Bookmarks;
 import com.github.qlefevre.sp2pp.settings.Config;
 import com.github.qlefevre.sp2pp.settings.ConfigEntry;
@@ -105,6 +104,9 @@ public class SP2PP {
     private static void addBuyTransactions(Sheet sheet, Client client, Map<String, Security> securitiesMap,
             Map<String, Portfolio> portfoliosMap, Map<String, Account> accountsMap) {
 
+        Watchlist watchlist = new Watchlist("Produits actifs");
+        client.addWatchlist(watchlist);
+
         Iterator<Row> rowIterator = sheet.iterator();
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
@@ -138,12 +140,18 @@ public class SP2PP {
 
             new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
 
+            // On ajoute la liste des produits actifs
+            watchlist.addSecurity(security);
+
         }
 
     }
 
     private static void addSellTransactions(Sheet sheet, Client client, Map<String, Security> securitiesMap,
             Map<String, Portfolio> portfoliosMap, Map<String, Account> accountsMap) {
+
+        Watchlist watchlist = new Watchlist("Produits remboursés");
+        client.addWatchlist(watchlist);
 
         Iterator<Row> rowIterator = sheet.iterator();
         while (rowIterator.hasNext()) {
@@ -197,6 +205,8 @@ public class SP2PP {
 
             new BuySellEntry(portfoliosMap.get(broker), transaction, accountsMap.get(broker), accountTransaction);
 
+             // On ajoute la liste des produits remboursés
+            watchlist.addSecurity(security);
         }
 
     }

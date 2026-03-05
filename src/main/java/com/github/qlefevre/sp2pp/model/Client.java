@@ -10,6 +10,7 @@ public class Client {
     private String version;
     private String baseCurrency;
     private List<Security> securities;
+    private List<Watchlist> watchlists = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
     private List<Portfolio> portfolios = new ArrayList<>();
     private Settings settings;
@@ -27,6 +28,10 @@ public class Client {
 
     public void addPortfolio(Portfolio portfolio) {
         this.portfolios.add(portfolio);
+    }
+
+    public void addWatchlist(Watchlist watchlist) {
+        this.watchlists.add(watchlist);
     }
 
      public void addAccount(Account account)
@@ -54,5 +59,6 @@ public class Client {
     public String getBaseCurrency() { return baseCurrency; }
     public List<Security> getSecurities() { return securities; }
     public List<Portfolio> getPortfolios() { return portfolios; }
+    public List<Watchlist> getWatchlists() { return watchlists; }
    
 }
