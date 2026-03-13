@@ -1,4 +1,11 @@
 {
     "java.debug.settings.onBuildFailureProceed": true,
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+
+
+
+     "editor.codeActionsOnSave": {
+  "source.fixAll": true,
+  "source.organizeImports": true
+}
 }

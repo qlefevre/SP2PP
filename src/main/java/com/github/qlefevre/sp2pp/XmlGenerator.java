@@ -1,6 +1,20 @@
 package com.github.qlefevre.sp2pp;
 
-import com.github.qlefevre.sp2pp.model.*;
+import java.io.FileWriter;
+
+import com.github.qlefevre.sp2pp.model.Account;
+import com.github.qlefevre.sp2pp.model.AccountTransaction;
+import com.github.qlefevre.sp2pp.model.BuySellEntry;
+import com.github.qlefevre.sp2pp.model.Classification;
+import com.github.qlefevre.sp2pp.model.Classification.Assignment;
+import com.github.qlefevre.sp2pp.model.Client;
+import com.github.qlefevre.sp2pp.model.CrossEntry;
+import com.github.qlefevre.sp2pp.model.Portfolio;
+import com.github.qlefevre.sp2pp.model.PortfolioTransaction;
+import com.github.qlefevre.sp2pp.model.Price;
+import com.github.qlefevre.sp2pp.model.Security;
+import com.github.qlefevre.sp2pp.model.Taxonomy;
+import com.github.qlefevre.sp2pp.model.Watchlist;
 import com.github.qlefevre.sp2pp.settings.AttributeType;
 import com.github.qlefevre.sp2pp.settings.AttributeTypes;
 import com.github.qlefevre.sp2pp.settings.Bookmark;
@@ -16,7 +30,6 @@ import com.github.qlefevre.sp2pp.xstream.CustomReferenceByIdMarshallingStrategy;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
-import java.io.FileWriter;
 
 public class XmlGenerator {
     public static void generateXml(Client client, String outputPath) throws Exception {
@@ -38,6 +51,9 @@ public class XmlGenerator {
         xstream.alias("buysell", BuySellEntry.class);
         xstream.alias("crossEntry", CrossEntry.class);
         xstream.alias("watchlist", Watchlist.class);
+        xstream.alias("taxonomy", Taxonomy.class);
+        xstream.alias("classification", Classification.class);
+             xstream.alias("assignment", Assignment.class);
 
         // entries used in <configurationSets>
         // settings subtree

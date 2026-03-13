@@ -13,6 +13,7 @@ public class Client {
     private List<Watchlist> watchlists = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
     private List<Portfolio> portfolios = new ArrayList<>();
+    private List<Taxonomy> taxonomies = new ArrayList<>();
     private Settings settings;
 
     public Client(String id) {
@@ -60,5 +61,6 @@ public class Client {
     public List<Security> getSecurities() { return securities; }
     public List<Portfolio> getPortfolios() { return portfolios; }
     public List<Watchlist> getWatchlists() { return watchlists; }
+    public List<Taxonomy> getTaxonomies() {      return taxonomies;    }
    
 }

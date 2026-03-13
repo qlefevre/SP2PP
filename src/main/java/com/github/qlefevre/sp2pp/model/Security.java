@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class Security {
+public class Security implements InvestmentVehicle {
     private String id;
     private String name;
     private String currencyCode;

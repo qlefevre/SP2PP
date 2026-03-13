@@ -1,24 +1,5 @@
 package com.github.qlefevre.sp2pp;
 
-import com.github.qlefevre.sp2pp.model.Account;
-import com.github.qlefevre.sp2pp.model.AccountTransaction;
-import com.github.qlefevre.sp2pp.model.BuySellEntry;
-import com.github.qlefevre.sp2pp.model.Client;
-import com.github.qlefevre.sp2pp.model.Portfolio;
-import com.github.qlefevre.sp2pp.model.PortfolioTransaction;
-import com.github.qlefevre.sp2pp.model.Security;
-import com.github.qlefevre.sp2pp.model.Watchlist;
-import com.github.qlefevre.sp2pp.settings.AttributeTypes;
-import com.github.qlefevre.sp2pp.settings.Bookmarks;
-import com.github.qlefevre.sp2pp.settings.Config;
-import com.github.qlefevre.sp2pp.settings.ConfigEntry;
-import com.github.qlefevre.sp2pp.settings.ConfigSet;
-import com.github.qlefevre.sp2pp.settings.ConfigurationSets;
-import com.github.qlefevre.sp2pp.settings.Configurations;
-import com.github.qlefevre.sp2pp.settings.Settings;
-
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -30,6 +11,30 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.github.qlefevre.sp2pp.model.Account;
+import com.github.qlefevre.sp2pp.model.AccountTransaction;
+import com.github.qlefevre.sp2pp.model.BuySellEntry;
+import com.github.qlefevre.sp2pp.model.Classification;
+import com.github.qlefevre.sp2pp.model.Client;
+import com.github.qlefevre.sp2pp.model.Portfolio;
+import com.github.qlefevre.sp2pp.model.PortfolioTransaction;
+import com.github.qlefevre.sp2pp.model.Security;
+import com.github.qlefevre.sp2pp.model.Taxonomy;
+import com.github.qlefevre.sp2pp.model.Watchlist;
+import com.github.qlefevre.sp2pp.settings.AttributeTypes;
+import com.github.qlefevre.sp2pp.settings.Bookmarks;
+import com.github.qlefevre.sp2pp.settings.Config;
+import com.github.qlefevre.sp2pp.settings.ConfigEntry;
+import com.github.qlefevre.sp2pp.settings.ConfigSet;
+import com.github.qlefevre.sp2pp.settings.ConfigurationSets;
+import com.github.qlefevre.sp2pp.settings.Configurations;
+import com.github.qlefevre.sp2pp.settings.Settings;
 
 public class SP2PP {
     public static void main(String[] args) {
@@ -47,6 +52,7 @@ public class SP2PP {
 
                 sheet = workbook.getSheetAt(0); // Premier onglet Portefeuille
                 addBuyTransactions(sheet, client, securitiesMap, portfoliosMap, accountsMap);
+                addRiskTaxonomy(sheet,client, securitiesMap);
 
                 sheet = workbook.getSheetAt(3); // Quatrième onglet PS remboursés
                 addSellTransactions(sheet, client, securitiesMap, portfoliosMap, accountsMap);
@@ -59,6 +65,40 @@ public class SP2PP {
         } catch (Exception e) {
             throw new RuntimeException("Error processing Excel file", e);
         }
+    }
+
+    private static void addRiskTaxonomy(Sheet sheet, Client client, Map<String,Security> securitiesMap) {
+        String title = "Rémunération & risque";
+        Taxonomy taxonomy = new Taxonomy(title);
+        client.getTaxonomies().add(taxonomy);
+        Classification root = new Classification();
+        root.setColor("#AAAAAA");
+        root.setName(title);
+        taxonomy.setRootNode(root);
+
+        Map<Security,String> riskMap = new HashMap<>();
+
+        Iterator<Row> rowIterator = sheet.iterator();
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            if (row.getRowNum() == 0 || row.getCell(0) == null || row.getCell(0).getStringCellValue().isEmpty())
+                continue;
+
+            String isin = row.getCell(0).getStringCellValue();
+            String risk = row.getCell(10).getStringCellValue();
+            riskMap.put(securitiesMap.get(isin), risk);
+        }
+        
+        //Ajout des classifications de risque
+        riskMap.values().stream().distinct().forEach  (risk0 -> {
+            Classification classification = new Classification();
+            classification.setName(risk0);
+            classification.setColor("#AAAAAA");
+            root.addChild(classification);
+            riskMap.entrySet().stream().filter(entry -> entry.getValue().equals(risk0)).forEach(entry -> {
+                classification.addAssignment(new Classification.Assignment(entry.getKey()));
+            });
+        });
     }
 
     private static void createPortfolios(Client client, Map<String, Portfolio> portfoliosMap,
