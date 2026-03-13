@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -88,12 +89,17 @@ public class SP2PP {
             String risk = row.getCell(10).getStringCellValue();
             riskMap.put(securitiesMap.get(isin), risk);
         }
+
+        Map<String,String> riskColorMap = new LinkedHashMap<>();
+        riskColorMap.put("Faible", "#b6d7a8");
+        riskColorMap.put("Moyen", "#b7e1cd");
+        riskColorMap.put("Fort", "#fff2cc");
         
         //Ajout des classifications de risque
-        riskMap.values().stream().distinct().forEach  (risk0 -> {
+        riskColorMap.keySet().stream().distinct().forEach  (risk0 -> {
             Classification classification = new Classification();
             classification.setName(risk0);
-            classification.setColor("#AAAAAA");
+            classification.setColor(riskColorMap.get(risk0));
             root.addChild(classification);
             riskMap.entrySet().stream().filter(entry -> entry.getValue().equals(risk0)).forEach(entry -> {
                 classification.addAssignment(new Classification.Assignment(entry.getKey()));
