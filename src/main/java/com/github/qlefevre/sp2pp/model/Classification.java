@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 
@@ -94,6 +95,11 @@ public class Classification
     public Classification()
     {
         // needed for xstream de-serialization
+    }
+
+    public Classification(String name)
+    {
+        this( UUID.randomUUID().toString(), name);
     }
 
     public Classification(String id, String name)

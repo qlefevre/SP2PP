@@ -48,6 +48,8 @@ public class SP2PP {
                 Map<String, Account> accountsMap = new HashMap<>();
                 createPortfolios(client, portfoliosMap, accountsMap);
 
+                client.setSettings(createSettings(portfoliosMap));
+
                 Sheet sheet = workbook.getSheetAt(1); // Deuxième onglet Produits structurés
                 Map<String, Security> securitiesMap = addSecurities(sheet, client);
 
@@ -58,7 +60,7 @@ public class SP2PP {
                 sheet = workbook.getSheetAt(3); // Quatrième onglet PS remboursés
                 addSellTransactions(sheet, client, securitiesMap, portfoliosMap, accountsMap);
 
-                client.setSettings(createSettings(portfoliosMap));
+                
 
                 XmlGenerator.generateXml(client, "output.xml");
                 System.out.println("XML file created successfully.");
@@ -97,14 +99,29 @@ public class SP2PP {
         
         //Ajout des classifications de risque
         riskColorMap.keySet().stream().distinct().forEach  (risk0 -> {
-            Classification classification = new Classification();
-            classification.setName(risk0);
+            Classification classification = new Classification(risk0);
             classification.setColor(riskColorMap.get(risk0));
+            classification.setParent(root);
             root.addChild(classification);
             riskMap.entrySet().stream().filter(entry -> entry.getValue().equals(risk0)).forEach(entry -> {
                 classification.addAssignment(new Classification.Assignment(entry.getKey()));
             });
         });
+
+        // Taxonomy Risk
+        ConfigEntry entry = new ConfigEntry();
+        entry.setString("client-filter-selection");
+        ConfigSet configSet = new ConfigSet();
+        Configurations configurations = new Configurations();
+        Config portfolioConfig = new Config();
+        portfolioConfig.setUuid("TaxonomyView-"+taxonomy.getId());
+        portfolioConfig.setName("");
+        portfolioConfig.setData(client.getSettings().getConfigurationSets().getEntry().getFirst()
+        .getConfigSet().getConfigurations().getConfig().getFirst().getUuid()); 
+        configurations.getConfig().add(portfolioConfig);
+        configSet.setConfigurations(configurations);
+        entry.setConfigSet(configSet);
+        client.getSettings().getConfigurationSets().getEntry().add(entry);
     }
 
     private static void createPortfolios(Client client, Map<String, Portfolio> portfoliosMap,
@@ -268,21 +285,22 @@ public class SP2PP {
 
         // ConfigurationSets with one entry
         ConfigurationSets configSets = new ConfigurationSets();
+
+        // Portfolio
         ConfigEntry entry = new ConfigEntry();
         entry.setString("client-filter-definitions");
-
         ConfigSet configSet = new ConfigSet();
         Configurations configurations = new Configurations();
-        Config config = new Config();
-        config.setUuid(UUID.randomUUID().toString());
-        config.setName(portfoliosMap.keySet().stream().sorted().collect(Collectors.joining(", "))); 
-        config.setData(portfoliosMap.values().stream().map(Portfolio::getUuid).map(Object::toString)
+        Config portfolioConfig = new Config();
+        portfolioConfig.setUuid(UUID.randomUUID().toString());
+        portfolioConfig.setName(portfoliosMap.keySet().stream().sorted().collect(Collectors.joining(", "))); 
+        portfolioConfig.setData(portfoliosMap.values().stream().map(Portfolio::getUuid).map(Object::toString)
                 .collect(Collectors.joining(","))); 
-        configurations.getConfig().add(config);
+        configurations.getConfig().add(portfolioConfig);
         configSet.setConfigurations(configurations);
         entry.setConfigSet(configSet);
-        configSets.getEntry().add(entry);
 
+        configSets.getEntry().add(entry);
         settings.setConfigurationSets(configSets);
 
         return settings;
